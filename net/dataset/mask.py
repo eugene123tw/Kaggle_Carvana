@@ -72,7 +72,6 @@ def check_rle():
             match = rle == rle_hat
             print('%d match=%s'%(n,match))
 
-<<<<<<< HEAD
 def run_length_decode(rel, H, W, fill_value=255):
     mask = np.zeros((H * W), np.uint8)
     rel = np.array([int(s) for s in rel.split(' ')]).reshape(-1, 2)
@@ -82,9 +81,7 @@ def run_length_decode(rel, H, W, fill_value=255):
         mask[start:end] = fill_value
     mask = mask.reshape(H, W)
     return mask
-=======
 
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
 
 # main #################################################################

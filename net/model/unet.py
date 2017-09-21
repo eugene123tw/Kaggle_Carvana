@@ -1,9 +1,7 @@
-<<<<<<< HEAD
+
 from net.model.loss import *
 from net.model.blocks import *
 
-=======
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 import os
 import math
 import torch
@@ -12,29 +10,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
-<<<<<<< HEAD
-=======
-class CrossEntropyLoss2d(nn.Module):
-    def __init__(self, weight=None, size_average=True):
-        super(CrossEntropyLoss2d, self).__init__()
-        self.nll_loss = nn.NLLLoss2d(weight, size_average)
-
-    def forward(self, logits, targets):
-        return self.nll_loss(F.log_softmax(logits), targets)
-
-
-class BCELoss2d(nn.Module):
-    def __init__(self, weight=None, size_average=True):
-        super(BCELoss2d, self).__init__()
-        self.bce_loss = nn.BCELoss(weight, size_average)
-
-    def forward(self, logits, targets):
-        probs        = F.sigmoid(logits)
-        probs_flat   = probs.view (-1)
-        targets_flat = targets.view(-1)
-        return self.bce_loss(probs_flat, targets_flat)
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
 def make_linear_bn_prelu(in_channels, out_channels):
     return [
@@ -51,25 +26,14 @@ def make_conv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, paddin
         nn.ReLU(inplace=True),
     ]
 
-<<<<<<< HEAD
 def make_dilationconv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, padding=1, groups=1, dilation=1):
     return [
         nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, groups=groups, dilation=dilation ,bias=False),
-=======
-
-def make_dilation_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, padding=1, groups=1,dilation=(1, 1) ):
-    return [
-        nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, groups=groups, bias=False, dilation=dilation),
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
         nn.BatchNorm2d(out_channels),
         nn.ReLU(inplace=True),
     ]
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 class UNet256(nn.Module):
     def __init__(self, in_shape, num_classes):
         super(UNet256, self).__init__()
@@ -408,7 +372,6 @@ class UNet512_shallow (nn.Module):
 
         out   = self.center(out)
 
-<<<<<<< HEAD
         out   = F.upsample(out, scale_factor=2, mode='bilinear') #64
         out   = torch.cat([down2, out],1)
         out   = self.up2(out)
@@ -744,26 +707,10 @@ class UNet_pyramid_1 (nn.Module):
         predict0 = F.upsample(predict0, size=(self.height, self.width))
 
         out   = F.upsample(out, scale_factor=2, mode='bilinear') #512
-=======
-        out   = F.upsample_bilinear(out, scale_factor=2) #64
-        out   = torch.cat([down2, out],1)
-        out   = self.up2(out)
-
-        out   = F.upsample_bilinear(out, scale_factor=2) #128
-        out   = torch.cat([down1, out],1)
-        out   = self.up1(out)
-
-        out   = F.upsample_bilinear(out, scale_factor=2) #256
-        out   = torch.cat([down0, out],1)
-        out   = self.up0(out)
-
-        out   = F.upsample_bilinear(out, scale_factor=2) #512
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
         out   = torch.cat([down0a, out],1)
         out   = self.up0a(out)
 
         out   = self.classify(out)
-<<<<<<< HEAD
         out   = out + predict2 + predict1 + predict0
 
         return out
@@ -945,9 +892,6 @@ class UNet_pyramid_1024_2 (nn.Module):
         out = self.classify(out)
         out = out + predict6 + predict5 + predict4 + predict3 + predict2
         out = torch.squeeze(out, dim=1)
-=======
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
         return out
 
 
@@ -962,15 +906,9 @@ if __name__ == '__main__':
     if 1:
         inputs = torch.randn(batch_size, C, H, W)
         labels = torch.FloatTensor(batch_size, H, W).random_(1)
-
-<<<<<<< HEAD
         # net = UNet512_2(in_shape=(C,H,W), num_classes=1).cuda().train()
         # net = UNet1024(in_shape=(C,H,W)).cuda().train()
         net = UNet_pyramid_1024_2(in_shape=(C,H,W)).cuda().train()
-=======
-        net = UNet512_2(in_shape=(C,H,W), num_classes=1).cuda().train()
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
         x = Variable(inputs).cuda()
         y = Variable(labels).cuda()

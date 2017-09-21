@@ -2,15 +2,13 @@
 ## https://github.com/pytorch/examples/blob/master/imagenet/main.py
 
 from net.common import *
-<<<<<<< HEAD
 from net.model.loss import *
-=======
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
+
 from net.dataset.dataprocess import *
 from net.dataset.mask import *
 from net.rates import *
 from net.util import *
-<<<<<<< HEAD
+
 
 # from net.model.unet import UNet512_2 as Net
 # from net.model.unet import UNet512_shallow as Net
@@ -34,66 +32,6 @@ THRESHOLD = 127 # 0.5 # 127
 RESUME = False
 ADJUST_LR = False
 SAVE_GBEST = True
-
-=======
-# from net.model.deeplab import VGG_deeplab as Net
-# from net.model.vgg import vgg16 as Net
-# from net.model.unet import UNet256 as Net
-from net.model.unet import UNet512_2 as Net
-# from net.model.unet import UNet512_shallow as Net
-# from net.model.networks import SegNet as Net
-
-import torch
-import torch.nn as nn
-import torch.nn.init as init
-import torch.nn.functional as F
-
-from torch.utils import model_zoo
-from torchvision import models
-from torch.autograd import Variable
-
-
-THRESHOLD = 128 #0.5
-RESUME = True
-
-class CrossEntropyLoss2d(nn.Module):
-    def __init__(self, weight=None, size_average=True):
-        super(CrossEntropyLoss2d, self).__init__()
-        self.nll_loss = nn.NLLLoss2d(weight, size_average)
-
-    def forward(self, logits, targets):
-        return self.nll_loss(F.log_softmax(logits), targets)
-
-
-class BCELoss2d(nn.Module):
-    def __init__(self, weight=None, size_average=True):
-        super(BCELoss2d, self).__init__()
-        self.bce_loss = nn.BCELoss(weight, size_average)
-
-    def forward(self, logits, targets):
-        probs        = F.sigmoid(logits)
-        probs_flat   = probs.view (-1)
-        targets_flat = targets.view(-1)
-        return self.bce_loss(probs_flat, targets_flat)
-
-
-class SoftDiceLoss(nn.Module):
-    def __init__(self, weight=None, size_average=True):
-        super(SoftDiceLoss, self).__init__()
-    def forward(self, logits, targets):
-        num = targets.size(0)
-        probs = F.sigmoid(logits)
-        m1 = probs.view(num, -1)
-        m2 = targets.view(num, -1)
-        intersection = m1 * m2
-        score = 2. * (intersection.sum(1)+1) / (m1.sum(1)+m2.sum(1)+1)
-        score = 1 - score.sum()/num
-        return score
-
-def multiCriterion(logits, masks):
-    l = BCELoss2d()(logits, masks) + SoftDiceLoss()(logits, masks)
-    return l
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
 ############################################################################
 def show_train_batch_results(probs, masks, images, indices, wait=1, save_dir=None, names=None):
@@ -175,12 +113,6 @@ def predict(net, test_loader):
     assert(test_num == len(test_loader.sampler))
     return predictions
 
-
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 def predict_asIntType(net, test_loader, out_dir):
 
     test_dataset = test_loader.dataset
@@ -208,7 +140,7 @@ def predict_asIntType(net, test_loader, out_dir):
     assert(test_num == len(test_loader.sampler))
     return predictions
 
-<<<<<<< HEAD
+
 def predict_asFloatType(net, test_loader, out_dir):
 
     test_dataset = test_loader.dataset
@@ -234,8 +166,7 @@ def predict_asFloatType(net, test_loader, out_dir):
 
     assert(test_num == len(test_loader.sampler))
     return predictions
-=======
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
+
 
 def evaluate(net, test_loader):
 
@@ -252,34 +183,20 @@ def evaluate(net, test_loader):
         logits = net(images)
         probs = F.sigmoid(logits)
         pred_masks = (probs > 0.5).float()
-<<<<<<< HEAD
+
         # loss = criterion(logits, masks)
         loss = BCELoss2d()(logits, masks)
 
         # print statistics
-=======
-        loss = BCELoss2d()(logits, masks)
-
-        # print statistics
-        sum_smooth_loss += loss.data[0]
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
         test_acc += dice_loss(masks, pred_masks).data[0]
         test_loss += loss.data[0]
         sum += 1
 
-<<<<<<< HEAD
     test_acc = test_acc / sum
     test_loss = test_loss / sum
 
     return test_acc, test_loss
 
-=======
-    smooth_loss = sum_smooth_loss / sum
-    test_acc = test_acc / sum
-    test_loss = test_loss / sum
-
-    return test_acc,test_loss
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
 
 def ensemble():
@@ -287,15 +204,9 @@ def ensemble():
     data_dir = '/home/eugene/Documents/Kaggle_Carvana/data'
 
     ensembleList = [
-<<<<<<< HEAD
         '/home/eugene/Documents/Kaggle_Carvana/results/unet-1-640',
         '/home/eugene/Documents/Kaggle_Carvana/results/unet-1-1024',
         '/home/eugene/Documents/Kaggle_Carvana/results/unet-2-1024',
-=======
-        '/home/eugene/Documents/Kaggle_Carvana/results/unet-9-512',
-        '/home/eugene/Documents/Kaggle_Carvana/results/unet-0-640',
-        '/home/eugene/Documents/Kaggle_Carvana/results/unet-1-640',
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
     ]
 
     imageSize = [item.split('-')[-1] for item in ensembleList]
@@ -327,12 +238,7 @@ def ensemble():
             end = timer()
             time = (end - start) / 60
             time_remain = (num_test - n - 1) * time / (n + 1)
-<<<<<<< HEAD
             print('rle : b/num_test = %06d/%06d,  time elased (remain) = %0.1f (%0.1f) min' % (n, num_test, time, time_remain))
-=======
-            print('rle : b/num_test = %06d/%06d,  time elased (remain) = %0.1f (%0.1f) min' % (
-                n, num_test, time, time_remain))
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
         for index, itemInfo in infoDict.items():
             item = np.memmap(itemInfo[1] + '/preds.npy', dtype=np.uint8, mode='r', shape=(100064, int(itemInfo[0]), int(itemInfo[0])))
@@ -531,7 +437,6 @@ def do_training():
 
 def do_training_accu_gradients():
 
-<<<<<<< HEAD
     out_dir          = '/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-4-1024'
     train_split      = 'train-fold-4'
     validation_split = 'val-fold-4'
@@ -541,25 +446,14 @@ def do_training_accu_gradients():
     os.makedirs(out_dir + '/snap', exist_ok=True)
     os.makedirs(out_dir + '/tb_logging', exist_ok=True)
     # ---------------------------------------------------------------------------
-=======
-    out_dir          = '/home/eugene/Documents/Kaggle_Carvana/results/unet-1-1024'
-    train_split      = 'train-INTER_LINEAR-1024-4700' # 'train-INTER_LINEAR-640-4700' # 'train-INTER_LINEAR-640-5088' , 'train-INTER_LINEAR-512-5088' , 'train-INTER_LINEAR-512-4700'
-    validation_split = 'train-INTER_LINEAR-1024-388'
-    os.makedirs(out_dir + '/checkpoint', exist_ok=True)
-    os.makedirs(out_dir + '/snap', exist_ok=True)
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
     batch_size = 2     # Define batch size
     accmulate_size = 4 # Define accumulate size
-
-<<<<<<< HEAD
 
     # Initial tensorboard logger ---------------------------------------------------------------
     configure(out_dir + '/tb_logging', flush_secs=5)
     # --------------------------------------------------------------------------------------------
 
-=======
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
     # Initial log ------------------------------------------------------------------------------
     log = Logger()
     log.open(out_dir + '/log.train.txt', mode='a')
@@ -577,7 +471,6 @@ def do_training_accu_gradients():
     # Prepare DataLoader -----------------------------------------------------
     train_dataset = ImageDataset(train_split,
                                 transform=[
-<<<<<<< HEAD
                                     lambda x,y:  randomShiftScaleRotate2(x,y,shift_limit=(0,0), scale_limit=(-0.5,0.5), rotate_limit=(0,0)),
                                     # lambda x,y:  randomHorizontalFlip2(x,y),
                                 ],
@@ -592,19 +485,6 @@ def do_training_accu_gradients():
                         batch_size  = batch_size,
                         drop_last   = True,
                         num_workers = 8,
-=======
-                                    # lambda x,y:  randomShiftScaleRotate2(x,y,shift_limit=(-0.0625,0.0625), scale_limit=(-0.1,0.1), rotate_limit=(0,0)),
-                                    # lambda x,y:  randomHorizontalFlip2(x,y),
-                                ],
-                                is_mask=True,
-                                is_preload=False,)
-    train_loader  = DataLoader(
-                        train_dataset,
-                        sampler = RandomSampler(train_dataset),
-                        batch_size  = batch_size,
-                        drop_last   = True,
-                        num_workers = 0,
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
                         pin_memory  = True)
 
     test_dataset = ImageDataset( validation_split,
@@ -612,26 +492,18 @@ def do_training_accu_gradients():
                                  #     lambda x, y: randomShiftScaleRotate2(x, y, shift_limit=(-0.0625, 0.0625),scale_limit=(-0.1, 0.1), rotate_limit=(0, 0)),
                                  #     lambda x, y: randomHorizontalFlip2(x, y),
                                  # ],
-<<<<<<< HEAD
                                  type='train',
                                  resize=False,
                                  folder='train-INTER_LINEAR-1024x1024-hq',
                                  mask_folder='mask-INTER_LINEAR-1024x1024',
                                  )
-=======
-                                  is_mask=True,
-                                  is_preload=False,)
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
+
     test_loader  = DataLoader(
                         test_dataset,
                         sampler     = SequentialSampler(test_dataset),
                         batch_size  = 1,
                         drop_last   = False,
-<<<<<<< HEAD
                         num_workers = 6,
-=======
-                        num_workers = 0,
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
                         pin_memory  = True)
     # -----------------------------------------------------------------------------
 
@@ -640,7 +512,6 @@ def do_training_accu_gradients():
     # Set Net ---------------------------------
     ## resume from previous ----------------------------------
     if RESUME is True :
-<<<<<<< HEAD
         model_file = '/home/eugene/Documents/Kaggle_Carvana/results/unet-py-1/checkpoint/gbest.pth'
         # net = Net(in_shape=(3, H, W), num_classes=1)  # for U-Net model
         net = Net(in_shape=(3, H, W))
@@ -668,45 +539,18 @@ def do_training_accu_gradients():
         net = Net(in_shape=(3, H, W)) # for U-Net model
         # net = Net(in_shape=(3, H, W))
         # net = Net(num_classes=1)
-=======
-
-        model_file = out_dir +'/checkpoint/010.pth'  #final
-        net = Net(in_shape=(3, H, W), num_classes=1)
-
-        checkpoint = torch.load(model_file)
-
-        start_epoch = checkpoint['epoch']
-        net.load_state_dict(checkpoint['state_dict'])
-
-        ## optimiser ---------------------------------------------------------
-        optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
-        # optimizer = optim.RMSprop(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        net.cuda().train()
-    else:
-        # Train from scratch
-        start_epoch = 0
-        net = Net(in_shape=(3, H, W), num_classes=1) # for U-Net model
-        # net = Net(num_classes=1)                     # For other model
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
         net.cuda().train()
 
         ## optimiser ---------------------------------------------------------
         # optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
-<<<<<<< HEAD
         optimizer = optim.RMSprop(net.parameters(), lr=0.01, alpha=0.99, eps=1e-08, weight_decay=0)
         scheduler = ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)
-
-=======
-        optimizer = optim.RMSprop(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  ###0.0005
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
     # -----------------------------------------
 
 
     # --------------------------------------------------------------------
 
     ## Epoch and Iterator Variables ------------------------------------------------
-<<<<<<< HEAD
     num_epoches = 50  # 100
     it_print = 1  # 20
     epoch_test = 1
@@ -735,38 +579,6 @@ def do_training_accu_gradients():
     train_acc = np.nan
     gbest = 0 # Global best
     test_loss = 0
-=======
-    num_epoches = 35  # 100
-    it_print = 1  # 20
-    epoch_test = 1
-    epoch_valid = 1
-    epoch_save = [15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, num_epoches - 1]
-    ## --------------------------------------------------------------------
-
-
-
-
-    # Prepare training log ------------------------------------------------------------------------------
-    log.write('** start training here! **\n')
-    log.write('Trainig Batch Size= %s\n' % batch_size)
-    log.write('\n')
-
-    log.write('epoch    iter   rate | smooth_loss | train_loss train_acc | test_loss test_acc | \n')
-    log.write('--------------------------------------------------------------------------------------------------\n')
-    # --------------------- -----------------------------------------------------------------------------
-
-    # Initialize variables -------------
-    sum = 0                 # for smooth loss counter, increase during each epoch
-    sum_smooth_loss = 0.0   # summarize loss for each epoch
-    smooth_loss = 0.0       # for printing smooth_loss
-    accu_counter = 0
-    loss_accumul = 0.0
-    train_accuracy_accumul = 0.0
-    train_loss = np.nan
-    train_acc = np.nan
-    test_loss = np.nan
-    test_acc = np.nan
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
     # -----------------------------------
     start0 = timer()
 
@@ -775,7 +587,6 @@ def do_training_accu_gradients():
         start = timer() # Start timer
 
         # ---learning rate schduler ------------------------------
-<<<<<<< HEAD
         # if epoch > 24:
         #     adjust_learning_rate(optimizer, lr=0.0001)
         # elif epoch > 9:
@@ -786,24 +597,12 @@ def do_training_accu_gradients():
         if epoch > 0:
             scheduler.step(test_loss)
         rate = get_learning_rate(optimizer)[0]
-=======
-        if epoch >= 10:
-            adjust_learning_rate(optimizer, lr=0.001)
-        elif epoch >= 25:
-            adjust_learning_rate(optimizer, lr=0.0001)
-
-        rate = get_learning_rate(optimizer)[0]  # check
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
         # --------------------------------------------------------
 
         net.train() # Set model.train() after model.eval()
         num_its = len(train_loader)
 
         for it, (images, masks, indices) in enumerate(train_loader, 0):
-<<<<<<< HEAD
-=======
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
             # Set accumulator
             accu_counter += 1
 
@@ -814,13 +613,8 @@ def do_training_accu_gradients():
 
             # Forward pass and compute loss -----------------------
             logits = net(images)
-<<<<<<< HEAD
             loss = criterion(logits, masks)
             # loss = BCELoss2d()(logits, masks)
-=======
-            loss = BCELoss2d()(logits, masks)
-            loss_accumul += loss.data[0]
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
             loss.backward() # Accumulate gradients
             # -----------------------------------------------------
 
@@ -828,8 +622,6 @@ def do_training_accu_gradients():
             probs = F.sigmoid(logits)
             pred_masks = (probs > 0.5).float()
             # -----------------------------------------------------
-
-<<<<<<< HEAD
             # Train loss and Train acc ----------------------------
             train_loss = loss.data[0]
             train_acc  = dice_loss(masks, pred_masks).data[0]
@@ -837,15 +629,9 @@ def do_training_accu_gradients():
             batch_loss_accumul += train_loss
             batch_acc_accumul  += train_acc
             # -----------------------------------------------------
-=======
-            train_accuracy_accumul += dice_loss(masks, pred_masks).data[0]
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
-
             if accu_counter == accmulate_size:
                 # (1.) Update weights And (2.) Computer train loss
                 optimizer.step() # Update weights
-<<<<<<< HEAD
                 batch_loss = batch_loss_accumul / accmulate_size  # Average loss
                 batch_acc = batch_acc_accumul / accmulate_size
 
@@ -857,34 +643,10 @@ def do_training_accu_gradients():
 
                 print("\r%5.1f   %5d    %0.4f   | ........  .........    | %0.5f    %0.5f | %0.5f    %0.5f | " % \
                       (epoch + (it + 1) / num_its, it + 1, rate, train_loss, train_acc, batch_loss, batch_acc), end="", flush=False)
-=======
-                train_loss = loss_accumul / accmulate_size  # Average loss
-                train_acc  = train_accuracy_accumul / accmulate_size
-                # Compute smooth loss -------------------------------------
-                sum_smooth_loss += train_loss
-                sum += 1
-                smooth_loss = sum_smooth_loss / sum
-                # ---------------------------------------------------------
-
-                print('\r %5.1f   %5d    %0.4f   |  %0.4f  | %0.4f  %6.4f | ... ' % \
-                      (epoch + (it + 1) / num_its, it + 1, rate, smooth_loss, train_loss, train_acc), end='',flush=True)
-
-                # Re-initialize -------------------------------------
-                optimizer.zero_grad() # zero gradients
-
-                loss_accumul           = 0
-                train_accuracy_accumul = 0
-                accu_counter           = 0
-                # ----------------------------------------------------
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
 
         # Re-initialize -------------------------------------
         optimizer.zero_grad()  # zero gradients
-<<<<<<< HEAD
-=======
-        loss_accumul = 0
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
         accu_counter = 0
         # ----------------------------------------------------
 
@@ -892,7 +654,6 @@ def do_training_accu_gradients():
         time = (end - start) / 60
 
         if epoch % epoch_valid == 0 or epoch == 0 or epoch == num_epoches - 1:
-<<<<<<< HEAD
             net.eval()
             test_acc, test_loss = evaluate(net, test_loader)
             print('\r', end='', flush=True)
@@ -912,12 +673,6 @@ def do_training_accu_gradients():
                     'optimizer': optimizer.state_dict(),
                     'epoch': epoch,
                 }, out_dir + '/checkpoint/gbest.pth')
-=======
-            net.cuda().eval()
-            test_acc, test_loss = evaluate(net, test_loader)
-            log.write('\n %5.1f   %5d    %0.4f   |  %0.4f  | %0.4f  %6.4f | %0.4f  %6.4f  |  %3.1f min \n' % \
-                      (epoch + 1, it + 1, rate, smooth_loss, train_loss, train_acc, test_loss, test_acc, time))
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
         if epoch in epoch_save:
             torch.save(net.state_dict(), out_dir + '/snap/%03d.pth' % epoch)
@@ -1043,16 +798,10 @@ def do_submissions():
 
 
 def do_submit_efficient_mapping():
-<<<<<<< HEAD
     out_dir = '/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-2-1024'
     model_file = out_dir + '/snap/final.pth'  # final
     # model_file = out_dir + '/snap/gbest.pth'  # final
     # model_file = out_dir + '/snap/010.pth'  # final
-
-=======
-    out_dir = '/home/eugene/Documents/Kaggle_Carvana/results/unet-1-1024'
-    model_file = out_dir + '/snap/final.pth'  # final
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
     # logging, etc --------------------
     os.makedirs(out_dir + '/submit/results', exist_ok=True)
@@ -1064,7 +813,6 @@ def do_submit_efficient_mapping():
 
     ## dataset ----------------------------
     log.write('** dataset setting **\n')
-<<<<<<< HEAD
     batch_size = 6
 
     ## Used model
@@ -1073,15 +821,6 @@ def do_submit_efficient_mapping():
     test_dataset = ImageDataset('test-hq-100064',
                                 type='test',
                                 folder = 'test-INTER_LINEAR-1024x1024-hq',
-=======
-    batch_size = 4
-
-    test_dataset = ImageDataset('test-INTER_LINEAR-1024x1024-100064',
-                                # 'test-INTER_LINEAR-512x512-50024', #'test-INTER_LINEAR-256x256-50000', # 'test-INTER_LINEAR-256x256-50024', #'test-256x256-50024', # 'test-256x256-50000',
-                                is_mask=False,
-                                is_preload=False,  # True,
-                                type='test',
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
                                 )
     test_loader = DataLoader(
         test_dataset,
@@ -1095,12 +834,8 @@ def do_submit_efficient_mapping():
 
     ## net ----------------------------------------
     # net = Net(in_shape=(3, H, W), num_classes=1)
-<<<<<<< HEAD
     # net = Net(num_classes=1)
     net = Net(in_shape=(3, H, W))
-=======
-    net = Net(num_classes=1)
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
     net.load_state_dict(torch.load(model_file))
     net.cuda()
 
@@ -1111,21 +846,15 @@ def do_submit_efficient_mapping():
         net.eval()
         # probs = predict_efficient(net, test_loader, out_dir)
         probs = predict_asIntType(net, test_loader, out_dir)
-<<<<<<< HEAD
         # probs = predict_asFloatType(net, test_loader, out_dir)
-=======
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
         # np.save(out_dir + '/submit/probs-2.npy', probs)
 
 
         # resize to original and make csv
 
     print('make csv')
-<<<<<<< HEAD
     csv_file = out_dir + '/submit/results-final.csv'
-=======
-    csv_file = out_dir + '/submit/results-th%03d.csv' % THRESHOLD
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
+
     gz_file = csv_file + '.gz'
 
     # verify file order is correct!
@@ -1134,11 +863,8 @@ def do_submit_efficient_mapping():
 
     for n in range(num_test):
         name = test_dataset.names[n].split('/')[-1]
-<<<<<<< HEAD
         name = name.replace('<mask>', '').replace('<ext>', 'jpg').replace('png', 'jpg')
-=======
-        name = name.replace('<mask>', '').replace('<ext>', 'jpg')
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
+
         names.append(name)
 
     start = timer()
@@ -1161,7 +887,6 @@ def do_submit_efficient_mapping():
     df.to_csv(gz_file, index=False, compression='gzip')
 
 
-<<<<<<< HEAD
 #decode and check
 def run_check_submit_csv():
 
@@ -1250,40 +975,5 @@ if __name__ == '__main__':
     # run_csv_to_mask()
 
     # prediction_to_csv()
-=======
-# main #################################################################
-if __name__ == '__main__':
-    print( '%s: calling main function ... ' % os.path.basename(__file__))
-
-    # do_training()
-    # do_submissions()
-
-    # do_training_accu_gradients()
-    do_submit_efficient_mapping()
-
-
-    # ensemble()
-
-    if 0:
-        net = Net(in_shape=(3, 128, 128), num_classes=1)
-        net.cuda()
-
-        pretrained_file = '/home/eugene/Documents/Kaggle_Carvana/data/pretrain/vgg16-397923af.pth'
-        skip_list = ['fc.0.weight', 'fc.0.bias', 'fc.3.weight', 'fc.3.bias', 'fc.6.weight', 'fc.6.bias']
-        # skip_list = ['classifier.0.weight', 'classifier.0.bias', 'classifier.3.weight', 'classifier.3.bias', 'classifier.6.weight', 'classifier.6.bias']
-        pretrained_dict = torch.load(pretrained_file)
-        model_dict = net.state_dict()
-
-        pretrained_dict1 = {k:v for k,v in pretrained_dict.items() if k in model_dict and k not in skip_list}
-        # pretrained_dict1 = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-
-        model_dict.update(pretrained_dict1)
-
-        net.load_state_dict(model_dict)
-
-        print('\nhold!')
-        pass
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
     print('\nsucess!')

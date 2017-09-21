@@ -223,11 +223,7 @@ class SegNetEnc(nn.Module):
         super().__init__()
 
         layers = [
-<<<<<<< HEAD
             nn.Upsample(scale_factor=2),
-=======
-            nn.UpsamplingBilinear2d(scale_factor=2),
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
             nn.Conv2d(in_channels, in_channels // 2, 3, padding=1),
             nn.BatchNorm2d(in_channels // 2),
             nn.ReLU(inplace=True),
@@ -255,12 +251,8 @@ class SegNet(nn.Module):
 
         # should be vgg16bn but at the moment we have no pretrained bn models
         decoders = list(vgg16(pretrained=True).features.children())
-<<<<<<< HEAD
         # decoders = list(vgg16_bn(pretrained=True).features.children())
         # decoders = list(torch.load('/home/eugene/Documents/Kaggle_Carvana/data/pretrain/vgg16_bn-6c64b313.pth').state_dict())
-=======
-        # decoders = list(torch.load('/home/eugene/Documents/Kaggle_Carvana/data/pretrain/vgg16-397923af.pth').state_dict())
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
         self.dec1 = nn.Sequential(*decoders[:5])
         self.dec2 = nn.Sequential(*decoders[5:10])
@@ -278,11 +270,7 @@ class SegNet(nn.Module):
         self.enc3 = SegNetEnc(512, 128, 1)
         self.enc2 = SegNetEnc(256, 64, 0)
         self.enc1 = nn.Sequential(
-<<<<<<< HEAD
             nn.Upsample(scale_factor=2),
-=======
-            nn.UpsamplingBilinear2d(scale_factor=2),
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
             nn.Conv2d(128, 64, 3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
@@ -389,23 +377,14 @@ class PSPNet(nn.Module):
 
 if __name__ == '__main__':
     batch_size = 1
-<<<<<<< HEAD
     C, H, W = 3, 256, 256
-=======
-    C, H, W = 3, 640, 640
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
     if 1:
         inputs = torch.randn(batch_size, C, H, W)
         labels = torch.FloatTensor(batch_size, H, W).random_(1)
 
         # net = UNet512_2(in_shape=(C, H, W), num_classes=2).cuda().train()
-<<<<<<< HEAD
         net = PSPNet(num_classes=1).cuda().train()
-=======
-        net = SegNet(num_classes=1).cuda().train()
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
-
         x = Variable(inputs).cuda()
         y = Variable(labels).cuda()
         logits = net.forward(x)

@@ -126,18 +126,13 @@ def vgg16(pretrained=False, **kwargs):
     return model
 
 
-<<<<<<< HEAD
+
 def vgg16_bn(pretrained=False, **kwargs):
     """VGG 16-layer model (configuration "D") with batch normalization"""
     model = VGG(make_layers(cfg['D'], batch_norm=True), **kwargs)
     if pretrained:
         model.load_state_dict(torch.load('/home/eugene/Documents/Kaggle_Carvana/data/pretrain/vgg16_bn-6c64b313.pth'))
     return model
-=======
-def vgg16_bn(**kwargs):
-    """VGG 16-layer model (configuration "D") with batch normalization"""
-    return VGG(make_layers(cfg['D'], batch_norm=True), **kwargs)
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
 
 def vgg19(pretrained=False, **kwargs):

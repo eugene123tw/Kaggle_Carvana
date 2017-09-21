@@ -1,5 +1,4 @@
 from net.common import *
-<<<<<<< HEAD
 from PIL import Image
 import cv2
 from multiprocessing import Pool
@@ -10,31 +9,13 @@ INPUT_DIR = '/home/eugene/Documents/Kaggle_Carvana/data/image/test_hq'
 # INPUT_DIR = '/home/eugene/Documents/Kaggle_Carvana/data/image/seg_images_2/images'
 # INPUT_DIR = '/home/eugene/Documents/Kaggle_Carvana/data/image/seg_images_2/labels'
 # INPUT_DIR = '/home/eugene/Documents/Kaggle_Carvana/data/image/train_hq'
-=======
-# common tool for dataset
-import matplotlib.pyplot as plt
-from PIL import Image
-import cv2
-from multiprocessing import Pool, Process
-
-# INPUT_DIR = '/home/eugene/Documents/Kaggle_Carvana/data/image/train-jpg'
-# INPUT_DIR = '/home/eugene/Documents/Kaggle_Carvana/data/image/mask-png'
-INPUT_DIR = '/home/eugene/Documents/Kaggle_Carvana/data/image/test-jpg'
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
-
 ROOT_DIR = '/home/eugene/Documents/Kaggle_Carvana/data/image'
 
 # draw -----------------------------------
-<<<<<<< HEAD
 def im_show(name, image, resize=1, cmap = ''):
     H,W = image.shape[0:2]
     if cmap=='gray':
         plt.imshow(image.astype(np.uint8),cmap='gray')
-=======
-def im_show(name, image, resize=1):
-    H,W = image.shape[0:2]
-    #plt.imshow(image.astype(np.uint8),cmap='gray')
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
     plt.imshow(image.astype(np.uint8))
 
 
@@ -129,11 +110,6 @@ def randomShiftScaleRotate2(image, mask, shift_limit=(-0.0625,0.0625), scale_lim
     return image,mask
 
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 #return fix data for debug #####################################################3
 class FixedSampler(Sampler):
     def __init__(self, data, list):
@@ -148,8 +124,6 @@ class FixedSampler(Sampler):
         #print ('\tcalling Sampler:__len__')
         return self.num_samples
 
-
-<<<<<<< HEAD
 # see trorch/utils/data/sampler.py
 class RandomSamplerWithLength(Sampler):
     def __init__(self, data, length):
@@ -169,9 +143,6 @@ class RandomSamplerWithLength(Sampler):
 
 
 def imresize(inputName, destinationFolder='test-INTER_LINEAR-1024x1024-hq', width=1024, height=1024):
-=======
-def imresize(inputName, destinationFolder='test-INTER_LINEAR-1024x1024', width=1024, height=1024):
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
     input_img = INPUT_DIR+'/'+inputName
     outputName, extension = inputName.split('.') # xxxx.gif
@@ -181,7 +152,7 @@ def imresize(inputName, destinationFolder='test-INTER_LINEAR-1024x1024', width=1
         img = Image.open(input_img)
         img = np.array(img,dtype=np.float32)
     else:
-<<<<<<< HEAD
+
         out_dir = os.path.join(ROOT_DIR, destinationFolder, outputName+'.'+'png') # ROOT_DIR/folder/xxxx.jpg
         img = cv2.imread(input_img, 1)
 
@@ -190,19 +161,8 @@ def imresize(inputName, destinationFolder='test-INTER_LINEAR-1024x1024', width=1
     img = cv2.resize(img, (width, height), interpolation=cv2.INTER_LINEAR)
     cv2.imwrite(out_dir, img)
 
-
 def rename_file(dir, old_name, new_name):
     os.rename(old_name, new_name)
-=======
-        out_dir = os.path.join(ROOT_DIR, destinationFolder, outputName+'.'+'jpg') # ROOT_DIR/folder/xxxx.jpg
-        img = cv2.imread(input_img, 1)
-
-    # img = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
-    img = cv2.resize(img, (width, height), interpolation=cv2.INTER_LINEAR)
-    cv2.imwrite(out_dir, img, [cv2.IMWRITE_JPEG_QUALITY, 100])
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
-
 
 # main #################################################################
 if __name__ == '__main__':
@@ -211,7 +171,6 @@ if __name__ == '__main__':
     if 1:
         filelist = os.listdir(INPUT_DIR)
         p = Pool(7)
-<<<<<<< HEAD
         print(p.map(imresize, filelist))
 
         # for file in filelist:
@@ -238,6 +197,3 @@ if __name__ == '__main__':
             # plt.waitforbuttonpress()
             # plt.imshow(out_mask)
             # plt.waitforbuttonpress()
-=======
-        print(p.map(imresize, filelist))
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa

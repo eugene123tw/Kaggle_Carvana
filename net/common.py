@@ -1,40 +1,16 @@
-<<<<<<< HEAD
 import os
-
-=======
-SEED = 123
-
-import os
-
-os.environ['HOME'] = '/root'
-# os.environ['PYTHONUNBUFFERED'] = '1'
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
-
 # numerical libs
 import math
 import numpy as np
 import random
 import PIL
 import cv2
-<<<<<<< HEAD
-=======
-import collections
-
-random.seed(SEED)
-np.random.seed(SEED)
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 import matplotlib
 
 matplotlib.use('TkAgg')
 # matplotlib.use('Qt4Agg')
 # matplotlib.use('Qt5Agg')
 
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 # torch libs
 import torch
 import torchvision.transforms as transforms
@@ -49,7 +25,6 @@ import torch.optim as optim
 
 import torch.backends.cudnn as cudnn
 
-<<<<<<< HEAD
 # std libs
 import collections
 import types
@@ -58,16 +33,6 @@ import inspect
 import shutil
 # import pickle
 import dill
-=======
-cudnn.benchmark = True  ##uses the inbuilt cudnn auto-tuner to find the fastest convolution algorithms. -
-# cudnn.benchmark = False
-
-# std libs
-import numbers
-import inspect
-import shutil
-import pickle
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 from timeit import default_timer as timer  # ubuntu:  default_timer = time.time,  seconds
 from datetime import datetime
 import csv
@@ -76,12 +41,9 @@ import pickle
 import glob
 import sys
 # from time import sleep
-<<<<<<< HEAD
 from distutils.dir_util import copy_tree
 import zipfile
 import zlib
-=======
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
 
 import matplotlib.pyplot as plt
 import sklearn
@@ -95,7 +57,6 @@ updating pytorch
     https://discuss.pytorch.org/t/updating-pytorch/309
 
     ./conda config --add channels soumith
-<<<<<<< HEAD
     conda update pytorch torchvision
     conda install pytorch torchvision cuda80 -c soumith
 
@@ -117,10 +78,3 @@ if 1:
     cudnn.benchmark = True  ##uses the inbuilt cudnn auto-tuner to find the fastest convolution algorithms. -
     print('\tset cuda environment')
 # ---------------------------------------------------------------------------------
-=======
-
-'''
-
-
-
->>>>>>> 272eded3805ca69c6d80c862772ff4154780eefa
