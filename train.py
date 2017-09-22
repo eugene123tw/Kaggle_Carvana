@@ -798,7 +798,7 @@ def do_submissions():
 
 
 def do_submit_efficient_mapping():
-    out_dir = '/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-2-1024'
+    out_dir = '/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-4-1024'
     model_file = out_dir + '/snap/final.pth'  # final
     # model_file = out_dir + '/snap/gbest.pth'  # final
     # model_file = out_dir + '/snap/010.pth'  # final
@@ -912,7 +912,6 @@ def run_check_submit_csv():
 
 
 
-
 def prediction_to_csv():
     out_dir     = '/home/eugene/Documents/Kaggle_Carvana/results/unet-2-1024'
     predict_dir = '/home/eugene/Documents/Kaggle_Carvana/results/unet-2-1024/pred_mask_crf'
@@ -965,8 +964,8 @@ if __name__ == '__main__':
 
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    do_training_accu_gradients()
-    # do_submit_efficient_mapping()
+    # do_training_accu_gradients()
+    do_submit_efficient_mapping()
 
     # ensemble()
     # run_check_submit_csv()
