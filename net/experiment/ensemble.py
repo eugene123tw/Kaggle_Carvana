@@ -19,6 +19,33 @@ def im_show(name, image, resize=1, cmap = ''):
     plt.imshow(image.astype(np.uint8))
 
 
+def predict_asIntType(net, test_loader, out_dir):
+
+    test_dataset = test_loader.dataset
+
+    num = len(test_dataset)
+    H, W = CARVANA_HEIGHT, CARVANA_WIDTH
+    predictions = np.memmap(out_dir + '/preds.npy', dtype=np.uint8, mode='w+', shape=(num, H, W))
+
+    test_num  = 0
+    for it, (images, indices) in enumerate(test_loader, 0):
+        images = Variable(images.cuda(),volatile=True)
+
+        # forward
+        logits = net(images)
+        probs  = F.sigmoid(logits)
+
+        batch_size = len(indices)
+        test_num  += batch_size
+        start = test_num-batch_size
+        end   = test_num
+        probs = probs.data.cpu().numpy().reshape(-1, H, W)*255
+        predictions[start:end] = probs.astype(np.uint8)
+
+    assert(test_num == len(test_loader.sampler))
+    return predictions
+
+
 #https://www.kaggle.com/stainsby/fast-tested-rle
 def run_length_encode(mask):
     '''
@@ -43,28 +70,38 @@ def run_length_decode(rel, H, W, fill_value=255):
     return mask
 
 
+def ensemble_csv(csv_list, out_dir):
+
+    gz_file = out_dir + "/results-ensemble.csv.gz"
+
+    num     = 100064
+    H, W    = CARVANA_HEIGHT, CARVANA_WIDTH
+    predictions = np.memmap(out_dir + '/preds.npy', dtype=np.uint8, mode='w+', shape=(num, H, W))
+
+    for file_indices in range(0, len(csv_list)):
+        df = pd.read_csv(csv_list[file_indices], compression='gzip', header=0) # fold1/results-final.csv.gz
+        for n in range(0, num):
+            rle  = df.values[n][1]
+            mask = run_length_decode(rle, H=CARVANA_HEIGHT, W=CARVANA_WIDTH)/255
+            predictions[n] = predictions[n] + mask
+
+    predictions = predictions > (len(csv_list)/2)
+    names       = []
+
+    for n in range(0, num):
+        name  = df.values[n][0]
+        names.append(name)
+
+    rles  = []
 
 
-def ensemble_csv(csv_list, gz_file):
-    rles = []
-    names = []
+    for n in range(0, num):
+        if (n % 1000 == 0):
+            print('rle : b/num_test = %06d/%06d' % (n, num))
 
-    for n in range(0,100064):
-        accu_mask = 0
-        for file_indices in range(0, len(csv_list)):
-            df = pd.read_csv(csv_list[file_indices], compression='gzip', header=0, skiprows= n, nrows = 1)
-            rle = df.values[0][1]
-            accu_mask += run_length_decode(rle, H=CARVANA_HEIGHT, W=CARVANA_WIDTH)/255
-
-        names.append(df.values[0][0]) # Append name
-        accu_mask = accu_mask/len(csv_list)
-
-        im_show('mask', accu_mask, resize=0.25, cmap='gray')
-        plt.waitforbuttonpress()
-
-        rle = run_length_encode(accu_mask)
+        pred = predictions[n]
+        rle = run_length_encode(pred)
         rles.append(rle)
-
 
     df = pd.DataFrame({'img': names, 'rle_mask': rles})
     df.to_csv(gz_file, index=False, compression='gzip')
@@ -73,16 +110,10 @@ def ensemble_csv(csv_list, gz_file):
     # plt.waitforbuttonpress()
 
 
-
-
-
 if __name__ == "__main__":
     csv_list = [
         "/Users/Eugene/Documents/Git/fold1/results-final.csv.gz",
         "/Users/Eugene/Documents/Git/fold2/results-final.csv.gz",
     ]
 
-    ensemble_csv(
-        csv_list,
-        "/Users/Eugene/Documents/Git/results-ensemble.csv.gz"
-        )
+    ensemble_csv(csv_list,"/Users/Eugene/Documents/Git")
