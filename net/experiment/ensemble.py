@@ -59,8 +59,8 @@ def ensemble_csv(csv_list, gz_file):
         names.append(df.values[0][0]) # Append name
         accu_mask = accu_mask/len(csv_list)
 
-        im_show('mask', accu_mask, resize=0.25, cmap='gray')
-        plt.waitforbuttonpress()
+        # im_show('mask', accu_mask, resize=0.25, cmap='gray')
+        # plt.waitforbuttonpress()
 
         rle = run_length_encode(accu_mask)
         rles.append(rle)
@@ -78,11 +78,11 @@ def ensemble_csv(csv_list, gz_file):
 
 if __name__ == "__main__":
     csv_list = [
-        "/Users/Eugene/Documents/Git/fold1/results-final.csv.gz",
-        "/Users/Eugene/Documents/Git/fold2/results-final.csv.gz",
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-2-1024/submit/results-final.csv.gz",
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-3-1024/submit/results-final.csv.gz",
     ]
 
     ensemble_csv(
         csv_list,
-        "/Users/Eugene/Documents/Git/results-ensemble.csv.gz"
+        "/home/eugene/Documents/Kaggle_Carvana/results/results-ensemble-2-3.csv.gz"
         )
