@@ -87,12 +87,12 @@ def ensemble_csv(csv_list, out_dir):
 
     predictions = predictions > (len(csv_list)/2)
     names       = []
-
     for n in range(0, num):
         name  = df.values[n][0]
         names.append(name)
 
     rles  = []
+
 
 
     for n in range(0, num):
@@ -112,8 +112,9 @@ def ensemble_csv(csv_list, out_dir):
 
 if __name__ == "__main__":
     csv_list = [
-        "/Users/Eugene/Documents/Git/fold1/results-final.csv.gz",
-        "/Users/Eugene/Documents/Git/fold2/results-final.csv.gz",
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-2-1024/submit/results-final.csv.gz",
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-3-1024/submit/results-final.csv.gz",
     ]
 
     ensemble_csv(csv_list,"/Users/Eugene/Documents/Git")
+
