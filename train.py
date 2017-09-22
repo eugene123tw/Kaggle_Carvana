@@ -911,8 +911,6 @@ def run_check_submit_csv():
     pass
 
 
-
-
 def prediction_to_csv():
     out_dir     = '/home/eugene/Documents/Kaggle_Carvana/results/unet-2-1024'
     predict_dir = '/home/eugene/Documents/Kaggle_Carvana/results/unet-2-1024/pred_mask_crf'
