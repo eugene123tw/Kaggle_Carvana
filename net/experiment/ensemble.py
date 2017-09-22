@@ -68,13 +68,51 @@ def ensemble_csv(csv_list, gz_file):
     df = pd.DataFrame({'img': names, 'rle_mask': rles})
     df.to_csv(gz_file, index=False, compression='gzip')
 
+
+
+def ensemble_csv_v2(csv_list, out_dir):
+
+    gz_file = out_dir + "/results-ensemble.csv.gz"
+
+    rles = []
+    names = []
+
+    num = 100064
+    H, W = CARVANA_HEIGHT, CARVANA_WIDTH
+    binary_pred = np.memmap(out_dir + '/preds.npy', dtype=np.uint8, mode='w+', shape=(num, H, W))
+
+    print("Do merge CSV")
+    for file_indices in range(0, len(csv_list)):
+        df = pd.read_csv(csv_list[file_indices], compression='gzip', header=0)
+        for n in range(0, num):
+            rle = df.values[n][1]
+            binary_pred[n] = binary_pred[n] + (run_length_decode(rle, H=CARVANA_HEIGHT, W=CARVANA_WIDTH)/255)
+            if file_indices==0:
+                names.append(df.values[n][0])
+            if n%1000==0:
+                print('File indices: %06d/%06d, rle : b/num_test = %06d/%06d' %
+                      (file_indices, len(csv_list), n + 1, num)
+                )
+
+    binary_pred = binary_pred > (len(csv_list)/2)
+
+    print("Do run_length_encode")
+    for n in range(0, num):
+        mask = binary_pred[n]
+        rle = run_length_encode(mask)
+        rles.append(rle)
+        print('rle : b/num_test = %06d/%06d' % (n+1, 100064))
+
+    df = pd.DataFrame({'img': names, 'rle_mask': rles})
+    df.to_csv(gz_file, index=False, compression='gzip')
+
+
 if __name__ == "__main__":
     csv_list = [
         "/Users/Eugene/Documents/Git/fold1/results-final.csv.gz",
         "/Users/Eugene/Documents/Git/fold2/results-final.csv.gz",
     ]
 
-    ensemble_csv(
-        csv_list,
-        "/Users/Eugene/Documents/Git/results-ensemble.csv.gz"
-        )
+    ensemble_csv(csv_list,"/Users/Eugene/Documents/Git/results-ensemble.csv.gz")
+
+    ensemble_csv_v2(csv_list, "/Users/Eugene/Documents/Git")
