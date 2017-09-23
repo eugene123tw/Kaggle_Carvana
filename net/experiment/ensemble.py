@@ -122,30 +122,31 @@ def ensemble_csv_v3(csv_list, out_dir, chunk_size=1000.0):
     begin, end = 0, 0
 
     for chunk in range(0, chunk_batch):
-        begin = end
-        end = begin + chunk_size
-        if end > num : end = num
+        begin = int(end)                 # 2000
+        end = int(begin + chunk_size)    # 3000
+        if end > num : end = int(num)
 
         binary_pred = np.memmap(out_dir + '/preds.npy', dtype=np.uint8, mode='w+', shape=(end-begin, H, W))
         for file_indices in range(0, len(csv_list)):
-            df = pd.read_csv(csv_list[file_indices], compression='gzip', header=0)
-            for n in range(begin, end):
+            df = pd.read_csv(csv_list[file_indices], compression='gzip', header=0) # 0 - 100064
+            for n in range(begin, end):  # 2000-3000
                 rle = df.values[n][1]
-                binary_pred[n] = binary_pred[n] + (run_length_decode(rle, H=CARVANA_HEIGHT, W=CARVANA_WIDTH) / 255)
+                binary_pred[n-begin] = binary_pred[n-begin] + (run_length_decode(rle, H=CARVANA_HEIGHT, W=CARVANA_WIDTH) / 255)
                 if file_indices == 0:
                     names.append(df.values[n][0])
-                if n % 1000 == 0:
-                    print('File indices: %02d/%06d, rle : b/num_test = %06d/%06d' %
+                if n % 100 == 0:
+                    print('File indices: %02d/%02d, rle : b/num_test = %06d/%06d' %
                           (file_indices+1, len(csv_list), n + 1, num)
                           )
 
         binary_pred = binary_pred > (len(csv_list) / 2)
         print("Do run_length_encode")
         for n in range(begin, end):
-            mask = binary_pred[n]
+            mask = binary_pred[n-begin]
             rle = run_length_encode(mask)
             rles.append(rle)
-            print('rle : b/num_test = %06d/%06d' % (n + 1, num))
+            if n%100==0:
+                print('rle : b/num_test = %06d/%06d' % (n + 1, num))
 
     df = pd.DataFrame({'img': names, 'rle_mask': rles})
     df.to_csv(gz_file, index=False, compression='gzip')
@@ -153,11 +154,21 @@ def ensemble_csv_v3(csv_list, out_dir, chunk_size=1000.0):
 
 
 if __name__ == "__main__":
+
     csv_list = [
         "/Users/Eugene/Documents/Git/fold1/results-final.csv.gz",
         "/Users/Eugene/Documents/Git/fold2/results-final.csv.gz",
     ]
 
-    ensemble_csv(csv_list,"/Users/Eugene/Documents/Git/results-ensemble.csv.gz")
+    csv_list = [
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-1024/submit/results-final.csv.gz",
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-2-1024/submit/results-final.csv.gz",
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-3-1024/submit/results-final.csv.gz",
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-4-1024/submit/results-final.csv.gz",
+    ]
 
-    ensemble_csv_v2(csv_list, "/Users/Eugene/Documents/Git")
+
+    # ensemble_csv(csv_list,"/Users/Eugene/Documents/Git/results-ensemble.csv.gz")
+    # ensemble_csv_v2(csv_list, "/Users/Eugene/Documents/Git")
+    # ensemble_csv_v3(csv_list, "/Users/Eugene/Documents/Git", 1000.0)
+    ensemble_csv_v3(csv_list, "/home/eugene/Documents/Kaggle_Carvana/results/ensemble", 1000.0)
