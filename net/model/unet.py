@@ -290,7 +290,7 @@ class UNet512_2 (nn.Module):
 
 class UNet512_shallow (nn.Module):
 
-    def __init__(self, in_shape, num_classes):
+    def __init__(self, in_shape, num_classes=1):
         super(UNet512_shallow, self).__init__()
         in_channels, height, width = in_shape
 

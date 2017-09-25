@@ -1,16 +1,207 @@
-import os
-# numerical libs
-import math
-import numpy as np
-import random
-import PIL
-import cv2
-import pandas as pd
-import matplotlib.pyplot as plt
+from net.common import *
+from net.dataset.dataprocess import *
+
+from net.model.unet import UNet512_2
+from net.model.unet import UNet512_shallow
+from net.model.unet import UNet1024
+from net.model.networks import SegNet
+from net.model.unet import UNet_pyramid_1
+from net.model.unet import UNet_pyramid_1024
+from net.model.unet import UNet_pyramid_1024_2
 
 
 CARVANA_HEIGHT = 1280
 CARVANA_WIDTH  = 1918
+CSV_BLOCK_SIZE = 1080
+THRESHOLD      = 127
+
+def predict_asIntType(net, test_loader, out_dir):
+
+    test_dataset = test_loader.dataset
+
+    num = len(test_dataset)
+    H, W = CARVANA_H, CARVANA_W
+    # predictions = np.memmap(out_dir + '/predictions.npy', dtype=np.float32, mode='w+', shape=(num, H, W))
+    predictions = np.memmap(out_dir + '/preds.npy', dtype=np.uint8, mode='w+', shape=(num, H, W))
+
+    test_num  = 0
+    for it, (images, indices) in enumerate(test_loader, 0):
+        images = Variable(images.cuda(),volatile=True)
+
+        # forward
+        logits = net(images)
+        probs  = F.sigmoid(logits)
+
+        batch_size = len(indices)
+        test_num  += batch_size
+        start = test_num-batch_size
+        end   = test_num
+        probs = probs.data.cpu().numpy().reshape(-1, H, W)*255
+        predictions[start:end] = probs.astype(np.uint8)
+
+    assert(test_num == len(test_loader.sampler))
+    return predictions
+
+def predict8_in_blocks(net, test_loader, block_size=CSV_BLOCK_SIZE, log=None, save_dir=None):
+
+    test_dataset = test_loader.dataset
+    test_iter    = iter(test_loader)
+    test_num     = len(test_dataset)
+    batch_size   = test_loader.batch_size
+    assert(block_size%batch_size==0)
+    assert(log!=None)
+
+    start0 = timer()
+    num  = 0
+    predictions = []
+    for n in range(0, test_num, block_size):
+        M = block_size if n+block_size < test_num else test_num-n
+        log.write('[n=%d, M=%d]  \n'%(n,M) )
+
+        start = timer()
+
+        ps  = None
+        for m in range(0, M, batch_size):
+            print('\r\t%05d/%05d'%(m,M), end='',flush=True)
+
+            images, indices  = test_iter.next()
+            if images is None:
+                break
+
+
+            # forward
+            images = Variable(images,volatile=True).cuda()
+            logits = net(images)
+            probs  = F.sigmoid(logits)
+
+            #save results
+            if ps is None:
+                H = images.size(2)
+                W = images.size(3)
+                ps  = np.zeros((M, H, W),np.uint8)
+                ids = np.zeros((M),np.int64)
+
+
+            batch_size = len(indices)
+            indices = indices.cpu().numpy()
+            probs = probs.data.cpu().numpy() *255
+
+            ps [m : m+batch_size] = probs
+            ids[m : m+batch_size] = indices
+            num  += batch_size
+            # im_show('probs',probs[0],1)
+            # cv2.waitKey(0)
+            #print('\tm=%d, m+batch_size=%d'%(m,m+batch_size) )
+
+        pass # end of one block -----------------------------------------------------
+        print('\r')
+        log.write('\tpredict = %0.2f min, '%((timer() - start) / 60))
+
+
+        ##if(n<64000): continue
+        if save_dir is not None:
+            start = timer()
+            np.savetxt(save_dir+'/indices-part%02d.8.txt'%(n//block_size), ids, fmt='%d')
+            np.save(save_dir+'/probs-part%02d.8.npy'%(n//block_size), ps) #  1min
+            log.write('save = %0.2f min'%((timer() - start) / 60))
+        log.write('\n')
+
+
+    log.write('\nall time = %0.2f min\n'%((timer() - start0) / 60))
+    assert(test_num == num)
+
+
+def predict_and_ensemble(model_dict, block_size=CSV_BLOCK_SIZE, log=None, save_dir=None):
+
+    batch_size = 4
+    rles       = []
+    names      = []
+
+
+    test_dataset = ImageDataset('test-hq-100064',
+                                type='test',
+                                folder='test-INTER_LINEAR-1024x1024-hq',
+                                )
+    test_loader = DataLoader(
+        test_dataset,
+        sampler=SequentialSampler(test_dataset),
+        batch_size=batch_size,
+        drop_last=False,
+        num_workers=2,
+        pin_memory=True)
+
+    test_dataset = test_loader.dataset
+    test_iter = iter(test_loader)
+    test_num = len(test_dataset)
+
+
+    for n in range(0, test_num):
+        name = test_dataset.names[n].split('/')[-1]
+        name = name.replace('<mask>', '').replace('<ext>', 'jpg').replace('png', 'jpg')
+        names.append(name)
+
+
+    assert (block_size % batch_size == 0)
+    assert (log != None)
+
+    start0 = timer()
+
+    num = 0
+    for n in range(0, test_num, block_size):                          # 0, 1000, 2000, ..., 100064
+        M = block_size if n + block_size < test_num else test_num - n # M = 1000
+        log.write('[n=%d, M=%d]  \n' % (n, M))
+
+        start = timer()
+
+        ps = None
+        for m in range(0, M, batch_size):                             # 0, 4, 8, 12, ...., 1000
+            print('\r\t%05d/%05d' % (m, M), end='', flush=True)
+
+            images, indices = test_iter.next()
+            if images is None:
+                break
+
+            for model_name, model_property in model_dict.items():
+
+                model_path = model_property[0]
+                net = model_property[3]
+                net.load_state_dict(torch.load(model_path))
+                net.cuda().eval()
+
+
+                # forward
+                images = Variable(images, volatile=True).cuda()
+                logits = net(images)
+                probs = F.sigmoid(logits)
+                probs = F.upsample_bilinear(probs, (CARVANA_HEIGHT, CARVANA_WIDTH))
+
+                # save results
+                if ps is None:
+                    ps = np.zeros((M, CARVANA_HEIGHT, CARVANA_WIDTH), np.uint8)
+                    ids = np.zeros((M), np.int64)
+
+                batch_size = len(indices)
+                indices = indices.cpu().numpy()
+                probs = probs.data.cpu().numpy() * 255
+
+                ps[m: m + batch_size] = ps[m: m + batch_size] + probs
+                ids[m: m + batch_size] = indices
+
+            num += batch_size
+
+        ps = ps/len(model_dict)
+
+        for n in range(0, M):
+            pred = ps[0] > THRESHOLD
+            rle = run_length_encode(pred)
+            rles.append(rle)
+
+            # im_show('probs',probs[0],1)
+            # cv2.waitKey(0)
+            # print('\tm=%d, m+batch_size=%d'%(m,m+batch_size) )
+
+    assert (test_num == num)
+
 
 def im_show(name, image, resize=1, cmap = ''):
     H,W = image.shape[0:2]
@@ -69,7 +260,6 @@ def ensemble_csv(csv_list, gz_file):
     df.to_csv(gz_file, index=False, compression='gzip')
 
 
-
 def ensemble_csv_v2(csv_list, out_dir):
 
     gz_file = out_dir + "/results-ensemble.csv.gz"
@@ -105,7 +295,6 @@ def ensemble_csv_v2(csv_list, out_dir):
 
     df = pd.DataFrame({'img': names, 'rle_mask': rles})
     df.to_csv(gz_file, index=False, compression='gzip')
-
 
 
 def ensemble_csv_v3(csv_list, out_dir, chunk_size=1000.0):
@@ -150,6 +339,60 @@ def ensemble_csv_v3(csv_list, out_dir, chunk_size=1000.0):
 
     df = pd.DataFrame({'img': names, 'rle_mask': rles})
     df.to_csv(gz_file, index=False, compression='gzip')
+
+
+def ensemble():
+
+    model_dict={}
+
+    # =============== Define the models to ensemble ===============
+    model_dict['unet-py-8-2-1024'] = [
+        "/Users/Eugene/Documents/Git/unet-py-8-2-1024/snap/final.pth",
+        "UNet_pyramid_1024_2",
+        1024,
+    ]
+
+    model_dict['unet-py-8-3-1024'] = [
+        "/Users/Eugene/Documents/Git/unet-py-8-3-1024/snap/final.pth",
+        "UNet_pyramid_1024_2",
+        1024,
+    ]
+
+    model_dict['unet-6-1024'] = [
+        "/Users/Eugene/Documents/Git/unet-6-1024/snap/final.pth",
+        "UNet512_shallow",
+        1024,
+    ]
+
+    model_dict['unet-7-1024'] = [
+        "/Users/Eugene/Documents/Git/unet-7-1024/snap/final.pth",
+        "UNet512_shallow",
+        1024,
+    ]
+
+    # model_dict['unet-py-0-1024'] = [
+    #     "/Users/Eugene/Documents/Git/unet-py-0-1024/snap/final.pth",
+    #     "UNet_pyramid_1024",
+    #     640,
+    # ]
+
+    # ==============================================================
+
+    # Define net
+    for key,val in model_dict.items():
+        if val[1]=="UNet_pyramid_1024_2":
+            net = UNet_pyramid_1024_2(in_shape=(3, val[2], val[2]))
+            model_dict[key].append(net)
+        elif val[1]=="UNet512_shallow":
+            net = UNet512_shallow(in_shape=(3, val[2], val[2]))
+            model_dict[key].append(net)
+        elif val[1]=="UNet_pyramid_1024":
+            net = UNet_pyramid_1024(in_shape=(3, val[2], val[2]))
+            model_dict[key].append(net)
+        else:
+            raise RuntimeError('No available model')
+
+    predict_and_ensemble(model_dict, )
 
 
 
