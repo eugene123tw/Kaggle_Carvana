@@ -111,8 +111,8 @@ def predict8_in_blocks(net, test_loader, block_size=CSV_BLOCK_SIZE, log=None, sa
     assert(test_num == num)
 
 
-def predict_and_ensemble(model_dict, block_size=CSV_BLOCK_SIZE, log=None, save_dir=None):
-
+def predict_and_ensemble(model_dict, block_size=CSV_BLOCK_SIZE, out_dir=None):
+    gz_file = out_dir + "/results-ensemble.csv.gz"
     batch_size = 4
     rles       = []
     names      = []
@@ -142,14 +142,14 @@ def predict_and_ensemble(model_dict, block_size=CSV_BLOCK_SIZE, log=None, save_d
 
 
     assert (block_size % batch_size == 0)
-    assert (log != None)
+    # assert (log != None)
 
     start0 = timer()
 
     num = 0
     for n in range(0, test_num, block_size):                          # 0, 1000, 2000, ..., 100064
         M = block_size if n + block_size < test_num else test_num - n # M = 1000
-        log.write('[n=%d, M=%d]  \n' % (n, M))
+        # log.write('[n=%d, M=%d]  \n' % (n, M))
 
         start = timer()
 
@@ -170,37 +170,34 @@ def predict_and_ensemble(model_dict, block_size=CSV_BLOCK_SIZE, log=None, save_d
 
 
                 # forward
-                images = Variable(images, volatile=True).cuda()
-                logits = net(images)
+                tmp_images = Variable(images, volatile=True).cuda()
+                logits = net(tmp_images)
                 probs = F.sigmoid(logits)
-                probs = F.upsample_bilinear(probs, (CARVANA_HEIGHT, CARVANA_WIDTH))
-
+                probs = torch.unsqueeze(probs, dim=1)
+                probs = F.upsample(probs, (CARVANA_HEIGHT, CARVANA_WIDTH), mode="bilinear")
+                probs = torch.squeeze(probs, dim=1)
                 # save results
                 if ps is None:
                     ps = np.zeros((M, CARVANA_HEIGHT, CARVANA_WIDTH), np.uint8)
-                    ids = np.zeros((M), np.int64)
+                    # ids = np.zeros((M), np.int64)
 
                 batch_size = len(indices)
-                indices = indices.cpu().numpy()
                 probs = probs.data.cpu().numpy() * 255
-
                 ps[m: m + batch_size] = ps[m: m + batch_size] + probs
-                ids[m: m + batch_size] = indices
 
             num += batch_size
 
         ps = ps/len(model_dict)
 
         for n in range(0, M):
-            pred = ps[0] > THRESHOLD
+            pred = ps[n] > THRESHOLD
             rle = run_length_encode(pred)
             rles.append(rle)
 
-            # im_show('probs',probs[0],1)
-            # cv2.waitKey(0)
-            # print('\tm=%d, m+batch_size=%d'%(m,m+batch_size) )
-
     assert (test_num == num)
+    df = pd.DataFrame({'img': names, 'rle_mask': rles})
+    df.to_csv(gz_file, index=False, compression='gzip')
+
 
 
 def im_show(name, image, resize=1, cmap = ''):
@@ -347,28 +344,28 @@ def ensemble():
 
     # =============== Define the models to ensemble ===============
     model_dict['unet-py-8-2-1024'] = [
-        "/Users/Eugene/Documents/Git/unet-py-8-2-1024/snap/final.pth",
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-2-1024/snap/final.pth",
         "UNet_pyramid_1024_2",
         1024,
     ]
 
     model_dict['unet-py-8-3-1024'] = [
-        "/Users/Eugene/Documents/Git/unet-py-8-3-1024/snap/final.pth",
+        "/home/eugene/Documents/Kaggle_Carvana/results/unet-py-8-3-1024/snap/final.pth",
         "UNet_pyramid_1024_2",
         1024,
     ]
 
-    model_dict['unet-6-1024'] = [
-        "/Users/Eugene/Documents/Git/unet-6-1024/snap/final.pth",
-        "UNet512_shallow",
-        1024,
-    ]
-
-    model_dict['unet-7-1024'] = [
-        "/Users/Eugene/Documents/Git/unet-7-1024/snap/final.pth",
-        "UNet512_shallow",
-        1024,
-    ]
+    # model_dict['unet-6-1024'] = [
+    #     "/Users/Eugene/Documents/Git/unet-6-1024/snap/final.pth",
+    #     "UNet512_shallow",
+    #     1024,
+    # ]
+    #
+    # model_dict['unet-7-1024'] = [
+    #     "/Users/Eugene/Documents/Git/unet-7-1024/snap/final.pth",
+    #     "UNet512_shallow",
+    #     1024,
+    # ]
 
     # model_dict['unet-py-0-1024'] = [
     #     "/Users/Eugene/Documents/Git/unet-py-0-1024/snap/final.pth",
@@ -392,7 +389,7 @@ def ensemble():
         else:
             raise RuntimeError('No available model')
 
-    predict_and_ensemble(model_dict, )
+    predict_and_ensemble(model_dict, 1000 , "/home/eugene/Documents/Kaggle_Carvana/results/ensemble")
 
 
 
@@ -414,4 +411,5 @@ if __name__ == "__main__":
     # ensemble_csv(csv_list,"/Users/Eugene/Documents/Git/results-ensemble.csv.gz")
     # ensemble_csv_v2(csv_list, "/Users/Eugene/Documents/Git")
     # ensemble_csv_v3(csv_list, "/Users/Eugene/Documents/Git", 1000.0)
-    ensemble_csv_v3(csv_list, "/home/eugene/Documents/Kaggle_Carvana/results/ensemble", 1000.0)
+    # ensemble_csv_v3(csv_list, "/home/eugene/Documents/Kaggle_Carvana/results/ensemble", 1000.0)
+    ensemble()
